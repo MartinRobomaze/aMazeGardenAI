@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>aMazeGarden controller</title>
+</head>
+<body>
+    <h1>aMazeGarden control center</h1>
+    <section>
+        <ul>
+            <li><a href="/addPlant">Add plant</a></li>
+            <li><a href="/editPlant">Edit plant</a></li>
+            <li><a href="/removePlant">Remove plant</a></li>
+        </ul>
+    </section>
+
+    <section>
+        <ul>
+            <li><p>Air temperature: {{ .AirTemperature }} °C</p></li>
+            <li><p>Air humidity: {{ .AirHumidity }} %</p></li>
+            <li><p>Soil temperature: {{ .SoilTemperature }} °C</p></li>
+            <li><p>SoilMoisture: {{ .SoilMoisture }} %</p></li>
+        </ul>
+    </section>
+
+    <section>
+        <a href="/manualWater">Manual watering</a>
+    </section>
+</body>
+</html>
