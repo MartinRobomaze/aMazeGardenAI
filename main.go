@@ -2,6 +2,7 @@ package main
 
 import (
 	"aMazeGardenAI/db"
+	"aMazeGardenAI/serverUtils"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -12,34 +13,41 @@ import (
 
 // Json received from aMazeGarden data logger template.
 type MeteoData struct {
-	AirTemperature string `json:"airTemperature"`
-	AirHumidity string `json:"airHumidity"`
-	SoilMoisture string `json:"soilMoisture"`
+	AirTemperature  string `json:"airTemperature"`
+	AirHumidity     string `json:"airHumidity"`
+	SoilMoisture    string `json:"soilMoisture"`
 	SoilTemperature string `json:"soilTemperature"`
 }
 
-
 // Database handler object.
 var dbHandler = db.DatabaseHandler{
-	DriverName:	"mysql",
-	User:		"aMazeGardenAI",
-	Password:	"Tvlwxfcg+1q",
-	Database:	"plants",
+	DriverName: "mysql",
+	User:       "aMazeGardenAI",
+	Password:   "Tvlwxfcg+1q",
+	Database:   "plants",
 }
 
-// Url to send data from data logger.
-var meteoDataUrl = "/dataLoggerData"
+var useForecast = true
 
 var maxSoilTemp = 25
-var useForecast = true
 
 var meteoData MeteoData
 
+var addPlantFormLoader = serverUtils.FileLoader{Path: "templates/addPlantForm.html"}
+var editPlantFormLoader = serverUtils.FileLoader{Path: "templates/editPlantForm.html"}
+var removePlantFormLoader = serverUtils.FileLoader{Path: "templates/removePlantForm.html"}
+
 func main() {
+
 	// Handle function for receiving data from data logger.
 	http.HandleFunc("/", handle)
-	http.HandleFunc("/addPlant", addPlantForm)
-	http.HandleFunc(meteoDataUrl, handleMeteoDataRequest)
+	http.HandleFunc("/addPlant", addPlantFormLoader.LoadFile)
+	http.HandleFunc("/removePlant", removePlantFormLoader.LoadFile)
+	http.HandleFunc("/editPlant", editPlantFormPage)
+	http.HandleFunc("/addPlantDb", addPlantToDb)
+	http.HandleFunc("/removePlantDb", removePlantFormLoader.LoadFile)
+	http.HandleFunc("/editPlantDB", editPlantFormLoader.LoadFile)
+	http.HandleFunc("/dataLoggerData", handleMeteoDataRequest)
 
 	fmt.Println("Http server listening...")
 
@@ -56,7 +64,7 @@ func main() {
 	}
 }
 
-func wateringAI(meteoData MeteoData) () {
+func wateringAI(meteoData MeteoData) {
 	fmt.Println("Got data: ", meteoData)
 
 	var numberOfPlants int
@@ -69,7 +77,7 @@ func wateringAI(meteoData MeteoData) () {
 	}
 
 	// Scan for all plants.
-	for  i := 1; i < numberOfPlants; i++ {
+	for i := 1; i < numberOfPlants; i++ {
 		// Convert string to int.
 		soilMoisture, err := strconv.Atoi(meteoData.SoilMoisture)
 
@@ -84,7 +92,6 @@ func wateringAI(meteoData MeteoData) () {
 			fmt.Println("Error getting soil temperature.")
 			panic(err)
 		}
-
 
 		// Get watered soil moisture of plant from the database.
 		wateredSoilMoisture, err := dbHandler.GetWateredSoilMoistureFromId(i)
@@ -104,20 +111,8 @@ func wateringAI(meteoData MeteoData) () {
 	}
 }
 
-func addPlantForm(writer http.ResponseWriter, request *http.Request) {
-	form, err := ioutil.ReadFile("addPlantForm.html")
-
-	if err != nil {
-		panic(err)
-	}
-
-	if _, err := writer.Write(form); err != nil {
-		panic(err)
-	}
-}
-
 func handle(writer http.ResponseWriter, request *http.Request) {
-	t, err := template.ParseFiles("index.html")
+	t, err := template.ParseFiles("templates/index.html")
 
 	if err != nil {
 		panic(err)
@@ -128,16 +123,82 @@ func handle(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func editPlantFormPage(writer http.ResponseWriter, request *http.Request) {
+	plants, err := dbHandler.GetAllPlants()
+
+	if err != nil {
+		panic(err)
+	}
+
+	t, err := template.ParseFiles("templates/editPlantForm.html")
+
+	if err != nil {
+		panic(err)
+	}
+
+	options := ""
+
+	for i := 0; i < len(plants); i++ {
+		options += "<option value=" + plants[i] + ">" + plants[i] + "</option>"
+	}
+
+	err = t.Execute(writer, template.HTML(options))
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func addPlantToDb(writer http.ResponseWriter, request *http.Request) {
+	if request.Method == "POST" {
+		if err := request.ParseForm(); err != nil {
+			panic(err)
+		}
+
+		plantName := request.FormValue("plantName")
+		plantWateredSoilMoisture, err := strconv.Atoi(request.FormValue("wateredSoilMoisture"))
+
+		if err != nil {
+			panic(err)
+		}
+
+		err = dbHandler.Write(plantName, plantWateredSoilMoisture)
+
+		if err != nil {
+			panic(err)
+		}
+
+		http.Redirect(writer, request, "/", 303)
+	}
+}
+
+func deletePlantDb(writer http.ResponseWriter, request *http.Request) {
+	if request.Method == "POST" {
+		if err := request.ParseForm(); err != nil {
+			panic(err)
+		}
+
+		plantName := request.FormValue("plantName")
+		plantWateredSoilMoisture, err := strconv.Atoi(request.FormValue("wateredSoilMoisture"))
+
+		if err != nil {
+			panic(err)
+		}
+
+		err = dbHandler.Write(plantName, plantWateredSoilMoisture)
+
+		if err != nil {
+			panic(err)
+		}
+
+		http.Redirect(writer, request, "/", 303)
+	}
+}
+
 /*
 	Handling data logger request.
 */
 func handleMeteoDataRequest(writer http.ResponseWriter, request *http.Request) {
-	// If url is bad.
-	if request.URL.Path != meteoDataUrl {
-		http.Error(writer, "404 not found.", http.StatusNotFound)
-		return
-	}
-
 	// If request method is POST.
 	if request.Method == "POST" {
 		// Read request.
@@ -160,5 +221,3 @@ func handleMeteoDataRequest(writer http.ResponseWriter, request *http.Request) {
 		wateringAI(meteoData)
 	}
 }
-
-

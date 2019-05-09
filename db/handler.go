@@ -13,7 +13,6 @@ type DatabaseHandler struct {
 }
 
 var db *sql.DB
-var err error
 
 var stmtIns *sql.Stmt
 var stmtOut *sql.Stmt
@@ -30,7 +29,7 @@ func (dbReader DatabaseHandler) Write(plantName string, wateredSoilMoisture int)
 		return err
 	}
 
-	if _ ,err = stmtIns.Exec(plantName, wateredSoilMoisture); err != nil {
+	if _, err = stmtIns.Exec(plantName, wateredSoilMoisture); err != nil {
 		return err
 	}
 
@@ -46,7 +45,7 @@ func (dbReader DatabaseHandler) Update(plantId int, plantName string, wateredSoi
 		return err
 	}
 
-	if _ ,err = stmtIns.Exec(plantName, wateredSoilMoisture, plantId); err != nil {
+	if _, err = stmtIns.Exec(plantName, wateredSoilMoisture, plantId); err != nil {
 		return err
 	}
 
@@ -67,7 +66,7 @@ func (dbReader DatabaseHandler) GetWateredSoilMoistureFromName(plantName string)
 	}
 
 	if err = stmtOut.Close(); err != nil {
-		return -1, err;
+		return -1, err
 	}
 
 	return wateredSoilMoisture, err
@@ -83,7 +82,7 @@ func (dbReader DatabaseHandler) GetWateredSoilMoistureFromId(plantId int) (water
 	}
 
 	if err = stmtOut.Close(); err != nil {
-		return -1, err;
+		return -1, err
 	}
 
 	return wateredSoilMoisture, err
@@ -105,12 +104,37 @@ func (dbReader DatabaseHandler) getPlantName(plant_id int) (plantName string, er
 	return plantName, err
 }
 
+func (dbReader DatabaseHandler) GetAllPlants() (plants []string, err error) {
+	if stmtOut, err = db.Prepare("SELECT name FROM plants_data"); err != nil {
+		return nil, err
+	}
+
+	rows, err := stmtOut.Query()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var name string
+
+		err = rows.Scan(&name)
+		if err != nil {
+			return nil, err
+		}
+
+		plants = append(plants, name)
+	}
+
+	return plants, nil
+}
+
 func (dbReader DatabaseHandler) deletePlant(plantName string) (err error) {
-	if stmtDel, err = db.Prepare("DELETE FROM plants_data WHERE plantName = ?"); err != nil {
+	if stmtDel, err = db.Prepare("DELETE FROM plants_data WHERE name = ?"); err != nil {
 		return err
 	}
 
-	if _ ,err = stmtDel.Exec(plantName); err != nil {
+	if _, err = stmtDel.Exec(plantName); err != nil {
 		return err
 	}
 
