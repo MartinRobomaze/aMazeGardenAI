@@ -12,7 +12,7 @@ type FileTemplateLoader struct {
 }
 
 func (fileTemplateLoader FileTemplateLoader) LoadFileTemplate(writer http.ResponseWriter, request *http.Request) {
-	plants, err := fileTemplateLoader.DbHandler.GetAllPlants()
+	plants, err := fileTemplateLoader.DbHandler.GetAllPlantsNames()
 
 	if err != nil {
 		panic(err)

@@ -104,7 +104,7 @@ func (dbReader DatabaseHandler) getPlantName(plant_id int) (plantName string, er
 	return plantName, err
 }
 
-func (dbReader DatabaseHandler) GetAllPlants() (plants []string, err error) {
+func (dbReader DatabaseHandler) GetAllPlantsNames() (plants []string, err error) {
 	if stmtOut, err = db.Prepare("SELECT name FROM plants_data"); err != nil {
 		return nil, err
 	}
@@ -124,6 +124,31 @@ func (dbReader DatabaseHandler) GetAllPlants() (plants []string, err error) {
 		}
 
 		plants = append(plants, name)
+	}
+
+	return plants, nil
+}
+
+func (dbReader DatabaseHandler) GetAllPlantsSoilMoisture() (plants []string, err error) {
+	if stmtOut, err = db.Prepare("SELECT watered_soil_moisture FROM plants_data"); err != nil {
+		return nil, err
+	}
+
+	rows, err := stmtOut.Query()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var wateredSoilMoisture string
+
+		err = rows.Scan(&wateredSoilMoisture)
+		if err != nil {
+			return nil, err
+		}
+
+		plants = append(plants, wateredSoilMoisture)
 	}
 
 	return plants, nil

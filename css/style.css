@@ -1,0 +1,38 @@
+body {
+    background-color: SlateBlue;
+    color: white;
+    font-family: "Liberation Serif";
+    font-size: 1.7em;
+}
+
+h1 {
+    text-align: center;
+}
+
+.plantSettings {
+    float: left;
+}
+
+.meteoDataShow {
+    float: left;
+    margin-left: 30em;
+}
+
+.manualControl {
+    margin-top: 18em;
+}
+
+ul li {
+    list-style-type: none;
+    padding: 0.5em;
+}
+
+a {
+    text-decoration: none;
+    color: white;
+    padding: 0.3em;
+}
+
+a:hover {
+    background-color: tomato;
+}

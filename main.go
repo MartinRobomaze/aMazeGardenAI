@@ -24,6 +24,15 @@ type ForecastData struct {
 	ForecastPrecipitationPossibility string `json:"forecastPrecipitationPossibility"`
 }
 
+type DisplayData struct {
+	AirTemperature                   string
+	AirHumidity                      string
+	SoilMoisture                     string
+	SoilTemperature                  string
+	ForecastTemperature              string
+	ForecastPrecipitationPossibility string
+}
+
 // Database handler object.
 var dbHandler = db.DatabaseHandler{
 	DriverName: "mysql",
@@ -38,21 +47,22 @@ var meteoData MeteoData
 
 var forecastData ForecastData
 
-var addPlantFormLoader = serverUtils.FileLoader{Path: "templates/addPlantForm.html"}
+var addPlantFormLoader = serverUtils.FileLoader{Path: "addPlantForm.html"}
 
 var editPlantFormLoader = serverUtils.FileTemplateLoader{
-	Path:      "templates/editPlantForm.html",
+	Path:      "editPlantForm.html",
 	DbHandler: dbHandler,
 }
 
 var deletePlantFormLoader = serverUtils.FileTemplateLoader{
-	Path:      "templates/removePlantForm.html",
+	Path:      "removePlantForm.html",
 	DbHandler: dbHandler,
 }
 
 func main() {
+	fs := http.FileServer(http.Dir("css"))
+	http.Handle("/css/", http.StripPrefix("/css/", fs))
 
-	// Handle function for receiving data from data logger.
 	http.HandleFunc("/", handle)
 	http.HandleFunc("/addPlant", addPlantFormLoader.LoadFile)
 	http.HandleFunc("/removePlant", deletePlantFormLoader.LoadFileTemplate)
@@ -78,61 +88,71 @@ func main() {
 	}
 }
 
-func wateringAI(meteoData MeteoData) {
+func wateringAI() {
 	fmt.Println("Got data: ", meteoData)
-
-	var numberOfPlants int
-	var err error
+	plantsWateredSoilMoisture, err := dbHandler.GetAllPlantsSoilMoisture()
+	fmt.Println(plantsWateredSoilMoisture)
 
 	// Get number of plants in database.
-	if numberOfPlants, err = dbHandler.GetNumberOfPlants(); err != nil {
-		fmt.Println("Error getting plants number.")
+	if err != nil {
 		panic(err)
 	}
 
 	// Scan for all plants.
-	for i := 1; i < numberOfPlants; i++ {
+	for i := 0; i < len(plantsWateredSoilMoisture); i++ {
 		// Convert string to int.
 		soilMoisture, err := strconv.Atoi(meteoData.SoilMoisture)
 
 		if err != nil {
-			fmt.Println("Error getting soil moisture.")
 			panic(err)
 		}
 
 		soilTemperature, err := strconv.Atoi(meteoData.SoilTemperature)
 
 		if err != nil {
-			fmt.Println("Error getting soil temperature.")
 			panic(err)
 		}
 
 		// Get watered soil moisture of plant from the database.
-		wateredSoilMoisture, err := dbHandler.GetWateredSoilMoistureFromId(i)
+		wateredSoilMoisture, err := strconv.Atoi(plantsWateredSoilMoisture[i])
 
 		// Error handling.
 		if err != nil {
-			fmt.Println("Error getting watered soil moisture.")
 			panic(err)
 		}
 
 		// If soil is dry.
 		if soilMoisture < wateredSoilMoisture {
 			if soilTemperature < maxSoilTemp {
-				fmt.Println("Watering needed")
+				forecastPrecipitation, err := strconv.Atoi(forecastData.ForecastPrecipitationPossibility)
+
+				if err != nil {
+					panic(err)
+				}
+
+				if forecastPrecipitation < 70 {
+					fmt.Println("Watering needed")
+				}
 			}
 		}
 	}
 }
 
 func handle(writer http.ResponseWriter, request *http.Request) {
-	t, err := template.ParseFiles("templates/index.html")
+	t, err := template.ParseFiles("index.html")
 
 	if err != nil {
 		panic(err)
 	}
-
-	if err := t.Execute(writer, meteoData); err != nil {
+	displayData := DisplayData{
+		AirTemperature:                   meteoData.AirTemperature,
+		AirHumidity:                      meteoData.AirHumidity,
+		SoilMoisture:                     meteoData.SoilMoisture,
+		SoilTemperature:                  meteoData.SoilTemperature,
+		ForecastTemperature:              forecastData.ForecastTemperature,
+		ForecastPrecipitationPossibility: forecastData.ForecastPrecipitationPossibility,
+	}
+	if err := t.Execute(writer, displayData); err != nil {
 		panic(err)
 	}
 }
@@ -147,7 +167,7 @@ func addPlantToDb(writer http.ResponseWriter, request *http.Request) {
 		plantWateredSoilMoisture, err := strconv.Atoi(request.FormValue("wateredSoilMoisture"))
 
 		if err != nil {
-			panic(err)
+			http.Redirect(writer, request, "/addPlant", 303)
 		}
 
 		err = dbHandler.Write(plantName, plantWateredSoilMoisture)
@@ -179,7 +199,7 @@ func editPlantDb(writer http.ResponseWriter, request *http.Request) {
 		err = dbHandler.Update(plantName, wateredSoilMoisture)
 
 		if err != nil {
-			panic(err)
+			http.Redirect(writer, request, "/editPlant", 303)
 		}
 
 		http.Redirect(writer, request, "/", 303)
@@ -197,7 +217,7 @@ func deletePlantDb(writer http.ResponseWriter, request *http.Request) {
 		err := dbHandler.DeletePlant(plantName)
 
 		if err != nil {
-			panic(err)
+			http.Redirect(writer, request, "/removePlant", 303)
 		}
 
 		http.Redirect(writer, request, "/", 303)
@@ -222,6 +242,8 @@ func handleForecastRequest(writer http.ResponseWriter, request *http.Request) {
 			panic(err)
 		}
 	}
+
+	wateringAI()
 }
 
 /*
@@ -247,6 +269,6 @@ func handleMeteoDataRequest(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		// Calling AI fuction.
-		wateringAI(meteoData)
+		wateringAI()
 	}
 }
