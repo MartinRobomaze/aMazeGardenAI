@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Delete plant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Edit plant</h1>
+<form action="/removePlantDb" method="post">
+    <p>Select plant: </p>
+
+    <select name="plantsList">
+        {{ . }}
+    </select>
+    <p></p>
+    <input type="submit" value="Delete plant">
+</form>
+</body>
+</html>

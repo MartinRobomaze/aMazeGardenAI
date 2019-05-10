@@ -42,7 +42,7 @@ func main() {
 	// Handle function for receiving data from data logger.
 	http.HandleFunc("/", handle)
 	http.HandleFunc("/addPlant", addPlantFormLoader.LoadFile)
-	http.HandleFunc("/removePlant", removePlantFormLoader.LoadFile)
+	http.HandleFunc("/removePlant", deletePlantFormPage)
 	http.HandleFunc("/editPlant", editPlantFormPage)
 	http.HandleFunc("/addPlantDb", addPlantToDb)
 	http.HandleFunc("/removePlantDb", removePlantFormLoader.LoadFile)
@@ -131,6 +131,32 @@ func editPlantFormPage(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	t, err := template.ParseFiles("templates/editPlantForm.html")
+
+	if err != nil {
+		panic(err)
+	}
+
+	options := ""
+
+	for i := 0; i < len(plants); i++ {
+		options += "<option value=" + plants[i] + ">" + plants[i] + "</option>"
+	}
+
+	err = t.Execute(writer, template.HTML(options))
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func deletePlantFormPage(writer http.ResponseWriter, request *http.Request) {
+	plants, err := dbHandler.GetAllPlants()
+
+	if err != nil {
+		panic(err)
+	}
+
+	t, err := template.ParseFiles("templates/removePlantForm.html")
 
 	if err != nil {
 		panic(err)
