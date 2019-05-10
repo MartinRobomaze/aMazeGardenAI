@@ -34,19 +34,27 @@ var maxSoilTemp = 25
 var meteoData MeteoData
 
 var addPlantFormLoader = serverUtils.FileLoader{Path: "templates/addPlantForm.html"}
-var editPlantFormLoader = serverUtils.FileLoader{Path: "templates/editPlantForm.html"}
-var removePlantFormLoader = serverUtils.FileLoader{Path: "templates/removePlantForm.html"}
+
+var editPlantFormLoader = serverUtils.FileTemplateLoader{
+	Path:      "templates/editPlantForm.html",
+	DbHandler: dbHandler,
+}
+
+var deletePlantFormLoader = serverUtils.FileTemplateLoader{
+	Path:      "templates/removePlantForm.html",
+	DbHandler: dbHandler,
+}
 
 func main() {
 
 	// Handle function for receiving data from data logger.
 	http.HandleFunc("/", handle)
 	http.HandleFunc("/addPlant", addPlantFormLoader.LoadFile)
-	http.HandleFunc("/removePlant", deletePlantFormPage)
-	http.HandleFunc("/editPlant", editPlantFormPage)
+	http.HandleFunc("/removePlant", deletePlantFormLoader.LoadFileTemplate)
+	http.HandleFunc("/editPlant", editPlantFormLoader.LoadFileTemplate)
 	http.HandleFunc("/addPlantDb", addPlantToDb)
-	http.HandleFunc("/removePlantDb", removePlantFormLoader.LoadFile)
-	http.HandleFunc("/editPlantDB", editPlantFormLoader.LoadFile)
+	http.HandleFunc("/removePlantDb", deletePlantDb)
+	http.HandleFunc("/editPlantDb", editPlantDb)
 	http.HandleFunc("/dataLoggerData", handleMeteoDataRequest)
 
 	fmt.Println("Http server listening...")
@@ -123,58 +131,6 @@ func handle(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func editPlantFormPage(writer http.ResponseWriter, request *http.Request) {
-	plants, err := dbHandler.GetAllPlants()
-
-	if err != nil {
-		panic(err)
-	}
-
-	t, err := template.ParseFiles("templates/editPlantForm.html")
-
-	if err != nil {
-		panic(err)
-	}
-
-	options := ""
-
-	for i := 0; i < len(plants); i++ {
-		options += "<option value=" + plants[i] + ">" + plants[i] + "</option>"
-	}
-
-	err = t.Execute(writer, template.HTML(options))
-
-	if err != nil {
-		panic(err)
-	}
-}
-
-func deletePlantFormPage(writer http.ResponseWriter, request *http.Request) {
-	plants, err := dbHandler.GetAllPlants()
-
-	if err != nil {
-		panic(err)
-	}
-
-	t, err := template.ParseFiles("templates/removePlantForm.html")
-
-	if err != nil {
-		panic(err)
-	}
-
-	options := ""
-
-	for i := 0; i < len(plants); i++ {
-		options += "<option value=" + plants[i] + ">" + plants[i] + "</option>"
-	}
-
-	err = t.Execute(writer, template.HTML(options))
-
-	if err != nil {
-		panic(err)
-	}
-}
-
 func addPlantToDb(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "POST" {
 		if err := request.ParseForm(); err != nil {
@@ -198,20 +154,41 @@ func addPlantToDb(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func editPlantDb(writer http.ResponseWriter, request *http.Request) {
+	if request.Method == "POST" {
+		if err := request.ParseForm(); err != nil {
+			panic(err)
+		}
+
+		plantName := request.FormValue("plantsList")
+
+		wateredSoilMoisture, err := strconv.Atoi(request.FormValue("wateredSoilMoisture"))
+
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(plantName)
+
+		err = dbHandler.Update(plantName, wateredSoilMoisture)
+
+		if err != nil {
+			panic(err)
+		}
+
+		http.Redirect(writer, request, "/", 303)
+	}
+}
+
 func deletePlantDb(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "POST" {
 		if err := request.ParseForm(); err != nil {
 			panic(err)
 		}
 
-		plantName := request.FormValue("plantName")
-		plantWateredSoilMoisture, err := strconv.Atoi(request.FormValue("wateredSoilMoisture"))
+		plantName := request.FormValue("plantsList")
 
-		if err != nil {
-			panic(err)
-		}
-
-		err = dbHandler.Write(plantName, plantWateredSoilMoisture)
+		err := dbHandler.DeletePlant(plantName)
 
 		if err != nil {
 			panic(err)

@@ -40,12 +40,12 @@ func (dbReader DatabaseHandler) Write(plantName string, wateredSoilMoisture int)
 	return nil
 }
 
-func (dbReader DatabaseHandler) Update(plantId int, plantName string, wateredSoilMoisture int) (err error) {
-	if stmtIns, err = db.Prepare("UPDATE plants_data SET plant_name = ?, watered_soil_moisture = ? WHERE plant_id = ?"); err != nil {
+func (dbReader DatabaseHandler) Update(plantName string, wateredSoilMoisture int) (err error) {
+	if stmtIns, err = db.Prepare("UPDATE plants_data SET watered_soil_moisture = ? WHERE name = ?"); err != nil {
 		return err
 	}
 
-	if _, err = stmtIns.Exec(plantName, wateredSoilMoisture, plantId); err != nil {
+	if _, err = stmtIns.Exec(wateredSoilMoisture, plantName); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func (dbReader DatabaseHandler) GetAllPlants() (plants []string, err error) {
 	return plants, nil
 }
 
-func (dbReader DatabaseHandler) deletePlant(plantName string) (err error) {
+func (dbReader DatabaseHandler) DeletePlant(plantName string) (err error) {
 	if stmtDel, err = db.Prepare("DELETE FROM plants_data WHERE name = ?"); err != nil {
 		return err
 	}
