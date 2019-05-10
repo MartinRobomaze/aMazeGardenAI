@@ -19,6 +19,11 @@ type MeteoData struct {
 	SoilTemperature string `json:"soilTemperature"`
 }
 
+type ForecastData struct {
+	ForecastTemperature              string `json:"forecastTemperature"`
+	ForecastPrecipitationPossibility string `json:"forecastPrecipitationPossibility"`
+}
+
 // Database handler object.
 var dbHandler = db.DatabaseHandler{
 	DriverName: "mysql",
@@ -27,11 +32,11 @@ var dbHandler = db.DatabaseHandler{
 	Database:   "plants",
 }
 
-var useForecast = true
-
 var maxSoilTemp = 25
 
 var meteoData MeteoData
+
+var forecastData ForecastData
 
 var addPlantFormLoader = serverUtils.FileLoader{Path: "templates/addPlantForm.html"}
 
@@ -56,6 +61,7 @@ func main() {
 	http.HandleFunc("/removePlantDb", deletePlantDb)
 	http.HandleFunc("/editPlantDb", editPlantDb)
 	http.HandleFunc("/dataLoggerData", handleMeteoDataRequest)
+	http.HandleFunc("/forecastData", handleForecastRequest)
 
 	fmt.Println("Http server listening...")
 
@@ -195,6 +201,26 @@ func deletePlantDb(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		http.Redirect(writer, request, "/", 303)
+	}
+}
+
+func handleForecastRequest(writer http.ResponseWriter, request *http.Request) {
+	if request.Method == "POST" {
+		// Read request.
+		jsn, err := ioutil.ReadAll(request.Body)
+
+		// Parsing request to string.
+		requestMessage := string(jsn)
+
+		// Error handling.
+		if err != nil {
+			panic(err)
+		}
+
+		// Decoding json.
+		if err := json.Unmarshal([]byte(requestMessage), &forecastData); err != nil {
+			panic(err)
+		}
 	}
 }
 
