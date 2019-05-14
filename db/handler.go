@@ -24,12 +24,12 @@ func (dbReader DatabaseHandler) Begin() (err error) {
 	return err
 }
 
-func (dbReader DatabaseHandler) Write(plantName string, wateredSoilMoisture int) (err error) {
-	if stmtIns, err = db.Prepare("INSERT INTO plants_data (name, watered_soil_moisture) VALUES (?, ?)"); err != nil {
+func (dbReader DatabaseHandler) Write(plantName string, wateredSoilMoisture int, positionX int, positionY int) (err error) {
+	if stmtIns, err = db.Prepare("INSERT INTO plants_data (name, watered_soil_moisture, pos_x, pos_y) VALUES (?, ?, ?, ?)"); err != nil {
 		return err
 	}
 
-	if _, err = stmtIns.Exec(plantName, wateredSoilMoisture); err != nil {
+	if _, err = stmtIns.Exec(plantName, wateredSoilMoisture, positionX, positionY); err != nil {
 		return err
 	}
 
@@ -152,6 +152,56 @@ func (dbReader DatabaseHandler) GetAllPlantsSoilMoisture() (plants []string, err
 	}
 
 	return plants, nil
+}
+
+func (dbReader DatabaseHandler) GetAllPlantsX() (plantsXPos []string, err error) {
+	if stmtOut, err = db.Prepare("SELECT pos_x FROM plants_data"); err != nil {
+		return nil, err
+	}
+
+	rows, err := stmtOut.Query()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var wateredSoilMoisture string
+
+		err = rows.Scan(&wateredSoilMoisture)
+		if err != nil {
+			return nil, err
+		}
+
+		plantsXPos = append(plantsXPos, wateredSoilMoisture)
+	}
+
+	return plantsXPos, nil
+}
+
+func (dbReader DatabaseHandler) GetAllPlantsY() (plantsYPos []string, err error) {
+	if stmtOut, err = db.Prepare("SELECT pos_y FROM plants_data"); err != nil {
+		return nil, err
+	}
+
+	rows, err := stmtOut.Query()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var wateredSoilMoisture string
+
+		err = rows.Scan(&wateredSoilMoisture)
+		if err != nil {
+			return nil, err
+		}
+
+		plantsYPos = append(plantsYPos, wateredSoilMoisture)
+	}
+
+	return plantsYPos, nil
 }
 
 func (dbReader DatabaseHandler) DeletePlant(plantName string) (err error) {

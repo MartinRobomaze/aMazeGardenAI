@@ -127,15 +127,60 @@ func wateringAI() {
 				forecastPrecipitation, err := strconv.Atoi(forecastData.ForecastPrecipitationPossibility)
 
 				if err != nil {
-					panic(err)
+					water()
+					break
 				}
 
 				if forecastPrecipitation < 70 {
-					fmt.Println("Watering needed")
+					water()
+					break
 				}
 			}
 		}
 	}
+}
+
+func water() {
+	fmt.Println("Watering needed")
+
+	xPositions, err := dbHandler.GetAllPlantsX()
+
+	if err != nil {
+		panic(err)
+	}
+
+	yPositions, err := dbHandler.GetAllPlantsY()
+
+	if err != nil {
+		panic(err)
+	}
+
+	var xMax = 0
+	var yMax = 0
+
+	for i := 0; i < len(xPositions); i++ {
+		x, err := strconv.Atoi(xPositions[i])
+		if err != nil {
+			panic(err)
+		}
+
+		if xMax < x {
+			xMax = x
+		}
+	}
+
+	for i := 0; i < len(yPositions); i++ {
+		y, err := strconv.Atoi(yPositions[i])
+		if err != nil {
+			panic(err)
+		}
+
+		if yMax < y {
+			yMax = y
+		}
+	}
+
+	fmt.Println("Max X and Y positions: ", xMax, yMax)
 }
 
 func handle(writer http.ResponseWriter, request *http.Request) {
@@ -165,12 +210,14 @@ func addPlantToDb(writer http.ResponseWriter, request *http.Request) {
 
 		plantName := request.FormValue("plantName")
 		plantWateredSoilMoisture, err := strconv.Atoi(request.FormValue("wateredSoilMoisture"))
+		plantPositionX, err := strconv.Atoi(request.FormValue("positionX"))
+		plantPositionY, err := strconv.Atoi(request.FormValue("positionY"))
 
 		if err != nil {
 			http.Redirect(writer, request, "/addPlant", 303)
 		}
 
-		err = dbHandler.Write(plantName, plantWateredSoilMoisture)
+		err = dbHandler.Write(plantName, plantWateredSoilMoisture, plantPositionX, plantPositionY)
 
 		if err != nil {
 			panic(err)
