@@ -3,6 +3,7 @@ package main
 import (
 	"aMazeGardenAI/db"
 	"aMazeGardenAI/serverUtils"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -31,6 +32,11 @@ type DisplayData struct {
 	SoilTemperature                  string
 	ForecastTemperature              string
 	ForecastPrecipitationPossibility string
+}
+
+type PayloadData struct {
+	SoilMoisture int
+	MaxPosition  string
 }
 
 // Database handler object.
@@ -127,12 +133,12 @@ func wateringAI() {
 				forecastPrecipitation, err := strconv.Atoi(forecastData.ForecastPrecipitationPossibility)
 
 				if err != nil {
-					water()
+					water(soilMoisture)
 					break
 				}
 
 				if forecastPrecipitation < 70 {
-					water()
+					water(soilMoisture)
 					break
 				}
 			}
@@ -140,7 +146,7 @@ func wateringAI() {
 	}
 }
 
-func water() {
+func water(soilMoisture int) {
 	fmt.Println("Watering needed")
 
 	xPositions, err := dbHandler.GetAllPlantsX()
@@ -180,7 +186,24 @@ func water() {
 		}
 	}
 
-	fmt.Println("Max X and Y positions: ", xMax, yMax)
+	positionEncoded := fmt.Sprint(xMax, ":", yMax)
+
+	var payloadData = PayloadData{
+		SoilMoisture: soilMoisture,
+		MaxPosition:  positionEncoded,
+	}
+
+	payload, err := json.Marshal(payloadData)
+
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = http.Post("http://requestbin.fullcontact.com/vj7u3ivj", "application/json", bytes.NewBuffer(payload))
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func handle(writer http.ResponseWriter, request *http.Request) {
