@@ -1,1 +1,1 @@
-web: bin/application
+web: /home/webapp/go/bin/amazegardenai
