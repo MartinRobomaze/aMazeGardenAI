@@ -54,6 +54,7 @@ var meteoData MeteoData
 var forecastData ForecastData
 
 var addPlantFormLoader = serverUtils.FileLoader{Path: "addPlantForm.html"}
+var setGardenFormLoader = serverUtils.FileLoader{Path: "gardenSettingsForm.html"}
 
 var editPlantFormLoader = serverUtils.FileTemplateLoader{
 	Path:      "editPlantForm.html",
@@ -73,9 +74,11 @@ func main() {
 	http.HandleFunc("/addPlant", addPlantFormLoader.LoadFile)
 	http.HandleFunc("/removePlant", deletePlantFormLoader.LoadFileTemplate)
 	http.HandleFunc("/editPlant", editPlantFormLoader.LoadFileTemplate)
+	http.HandleFunc("/gardenSetting", setGardenFormLoader.LoadFile)
 	http.HandleFunc("/addPlantDb", addPlantToDb)
 	http.HandleFunc("/removePlantDb", deletePlantDb)
 	http.HandleFunc("/editPlantDb", editPlantDb)
+	http.HandleFunc("/setGardenDb", setGardenDb)
 	http.HandleFunc("/dataLoggerData", handleMeteoDataRequest)
 	http.HandleFunc("/forecastData", handleForecastRequest)
 
@@ -288,6 +291,32 @@ func deletePlantDb(writer http.ResponseWriter, request *http.Request) {
 
 		if err != nil {
 			http.Redirect(writer, request, "/removePlant", 303)
+		}
+
+		http.Redirect(writer, request, "/", 303)
+	}
+}
+
+func setGardenDb(writer http.ResponseWriter, request *http.Request) {
+	if request.Method == "POST" {
+		if err := request.ParseForm(); err != nil {
+			panic(err)
+		}
+
+		length, err := strconv.Atoi(request.FormValue("gardenLength"))
+		width, err := strconv.Atoi(request.FormValue("gardenWidth"))
+		plantsSpacing, err := strconv.Atoi(request.FormValue("plantsDistance"))
+
+		if err != nil {
+			panic(err)
+		}
+
+
+		err = dbHandler.SetGarden(length, width, plantsSpacing)
+
+		if err != nil {
+			http.Redirect(writer, request, "/removePlant", 303)
+			panic(err)
 		}
 
 		http.Redirect(writer, request, "/", 303)

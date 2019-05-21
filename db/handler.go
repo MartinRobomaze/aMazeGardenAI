@@ -24,6 +24,36 @@ func (dbReader DatabaseHandler) Begin() (err error) {
 	return err
 }
 
+func (dbReader DatabaseHandler) SetGarden(length int, width int, plantsSpacing int) (err error) {
+	if stmtIns, err = db.Prepare("TRUNCATE TABLE gardenSettings"); err != nil {
+		return err
+	}
+
+	if _, err = stmtIns.Exec(length, width, plantsSpacing); err != nil {
+		return err
+	}
+
+	if err = stmtIns.Close(); err != nil {
+		return err
+	}
+
+	return nil
+
+	if stmtIns, err = db.Prepare("INSERT INTO gardenSettings (length, width, plants_spacing) VALUES (?, ?, ?)"); err != nil {
+		return err
+	}
+
+	if _, err = stmtIns.Exec(length, width, plantsSpacing); err != nil {
+		return err
+	}
+
+	if err = stmtIns.Close(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (dbReader DatabaseHandler) Write(plantName string, wateredSoilMoisture int, positionX int, positionY int) (err error) {
 	if stmtIns, err = db.Prepare("INSERT INTO plants_data (name, watered_soil_moisture, pos_x, pos_y) VALUES (?, ?, ?, ?)"); err != nil {
 		return err
@@ -54,6 +84,31 @@ func (dbReader DatabaseHandler) Update(plantName string, wateredSoilMoisture int
 	}
 
 	return nil
+}
+
+func (dbReader DatabaseHandler) GetGardenData() (gardenData []string, err error) {
+	if stmtOut, err = db.Prepare("SELECT * FROM gardenSettings"); err != nil {
+		return nil, err
+	}
+
+	rows, err := stmtOut.Query()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var wateredSoilMoisture string
+
+		err = rows.Scan(&wateredSoilMoisture)
+		if err != nil {
+			return nil, err
+		}
+
+		gardenData = append(gardenData, wateredSoilMoisture)
+	}
+
+	return gardenData, nil
 }
 
 func (dbReader DatabaseHandler) GetWateredSoilMoistureFromName(plantName string) (wateredSoilMoisture int, err error) {
