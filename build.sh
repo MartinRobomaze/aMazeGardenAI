@@ -4,5 +4,4 @@
 go get ./...
 
 # Build app
-go build ./ -o bin/application *.go
-go build ./ -o bin/application serverUtils/*.go
+go build ./ -o bin/application main.go
