@@ -1,4 +1,4 @@
-package serverUtils
+package main
 
 import (
 	"io/ioutil"

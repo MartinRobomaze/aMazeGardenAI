@@ -1,14 +1,13 @@
-package serverUtils
+package main
 
 import (
-	"aMazeGardenAI/db"
 	"html/template"
 	"net/http"
 )
 
 type FileTemplateLoader struct {
 	Path      string
-	DbHandler db.DatabaseHandler
+	DbHandler DatabaseHandler
 }
 
 func (fileTemplateLoader FileTemplateLoader) LoadFileTemplate(writer http.ResponseWriter, request *http.Request) {

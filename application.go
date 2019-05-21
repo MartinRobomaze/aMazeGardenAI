@@ -1,8 +1,6 @@
 package main
 
 import (
-	"aMazeGardenAI/db"
-	"aMazeGardenAI/serverUtils"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -40,7 +38,7 @@ type PayloadData struct {
 }
 
 // Database handler object.
-var dbHandler = db.DatabaseHandler{
+var dbHandler = DatabaseHandler{
 	DriverName: "mysql",
 	User:       "aMazeGardenAI",
 	Password:   "Tvlwxfcg+1q",
@@ -53,16 +51,16 @@ var meteoData MeteoData
 
 var forecastData ForecastData
 
-var addPlantFormLoader = serverUtils.FileLoader{Path: "addPlantForm.html"}
-var setGardenFormLoader = serverUtils.FileLoader{Path: "gardenSettingsForm.html"}
+var addPlantFormLoader = FileLoader{Path: "html/addPlantForm.html"}
+var setGardenFormLoader = FileLoader{Path: "html/gardenSettingsForm.html"}
 
-var editPlantFormLoader = serverUtils.FileTemplateLoader{
-	Path:      "editPlantForm.html",
+var editPlantFormLoader = FileTemplateLoader{
+	Path:      "html/editPlantForm.html",
 	DbHandler: dbHandler,
 }
 
-var deletePlantFormLoader = serverUtils.FileTemplateLoader{
-	Path:      "removePlantForm.html",
+var deletePlantFormLoader = FileTemplateLoader{
+	Path:      "html/removePlantForm.html",
 	DbHandler: dbHandler,
 }
 
