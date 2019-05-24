@@ -208,7 +208,7 @@ func water(soilMoisture int) {
 }
 
 func handle(writer http.ResponseWriter, request *http.Request) {
-	t, err := template.ParseFiles("index.html")
+	t, err := template.ParseFiles("html/index.html")
 
 	if err != nil {
 		panic(err)
