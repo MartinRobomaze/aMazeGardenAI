@@ -12,7 +12,7 @@ type DatabaseHandler struct {
 	Database   string
 }
 
-var db *sql.DB
+var database *sql.DB
 
 var stmtIns *sql.Stmt
 var stmtOut *sql.Stmt
@@ -20,12 +20,12 @@ var stmtDel *sql.Stmt
 
 func (dbReader DatabaseHandler) Begin() (err error) {
 	dbOpenString := dbReader.User + ":" + dbReader.Password + "@tcp(plants.cesclyipuuso.eu-west-1.rds.amazonaws.com:3306)/" + dbReader.Database
-	db, err = sql.Open(dbReader.DriverName, dbOpenString)
+	database, err = sql.Open(dbReader.DriverName, dbOpenString)
 	return err
 }
 
 func (dbReader DatabaseHandler) SetGarden(length int, width int, plantsSpacing int) (err error) {
-	if stmtIns, err = db.Prepare("TRUNCATE TABLE gardenSettings"); err != nil {
+	if stmtIns, err = database.Prepare("TRUNCATE TABLE gardenSettings"); err != nil {
 		return err
 	}
 
@@ -39,7 +39,7 @@ func (dbReader DatabaseHandler) SetGarden(length int, width int, plantsSpacing i
 
 	return nil
 
-	if stmtIns, err = db.Prepare("INSERT INTO gardenSettings (length, width, plants_spacing) VALUES (?, ?, ?)"); err != nil {
+	if stmtIns, err = database.Prepare("INSERT INTO gardenSettings (length, width, plants_spacing) VALUES (?, ?, ?)"); err != nil {
 		return err
 	}
 
@@ -55,7 +55,7 @@ func (dbReader DatabaseHandler) SetGarden(length int, width int, plantsSpacing i
 }
 
 func (dbReader DatabaseHandler) Write(plantName string, wateredSoilMoisture int, positionX int, positionY int) (err error) {
-	if stmtIns, err = db.Prepare("INSERT INTO plants_data (name, watered_soil_moisture, pos_x, pos_y) VALUES (?, ?, ?, ?)"); err != nil {
+	if stmtIns, err = database.Prepare("INSERT INTO plants_data (name, watered_soil_moisture, pos_x, pos_y) VALUES (?, ?, ?, ?)"); err != nil {
 		return err
 	}
 
@@ -71,7 +71,7 @@ func (dbReader DatabaseHandler) Write(plantName string, wateredSoilMoisture int,
 }
 
 func (dbReader DatabaseHandler) Update(plantName string, wateredSoilMoisture int) (err error) {
-	if stmtIns, err = db.Prepare("UPDATE plants_data SET watered_soil_moisture = ? WHERE name = ?"); err != nil {
+	if stmtIns, err = database.Prepare("UPDATE plants_data SET watered_soil_moisture = ? WHERE name = ?"); err != nil {
 		return err
 	}
 
@@ -87,7 +87,7 @@ func (dbReader DatabaseHandler) Update(plantName string, wateredSoilMoisture int
 }
 
 func (dbReader DatabaseHandler) GetGardenData() (gardenData []string, err error) {
-	if stmtOut, err = db.Prepare("SELECT * FROM gardenSettings"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT * FROM gardenSettings"); err != nil {
 		return nil, err
 	}
 
@@ -112,7 +112,7 @@ func (dbReader DatabaseHandler) GetGardenData() (gardenData []string, err error)
 }
 
 func (dbReader DatabaseHandler) GetWateredSoilMoistureFromName(plantName string) (wateredSoilMoisture int, err error) {
-	if stmtOut, err = db.Prepare("SELECT watered_soil_moisture FROM plants_data WHERE name = ?"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT watered_soil_moisture FROM plants_data WHERE name = ?"); err != nil {
 		return -1, err
 	}
 
@@ -128,7 +128,7 @@ func (dbReader DatabaseHandler) GetWateredSoilMoistureFromName(plantName string)
 }
 
 func (dbReader DatabaseHandler) GetWateredSoilMoistureFromId(plantId int) (wateredSoilMoisture int, err error) {
-	if stmtOut, err = db.Prepare("SELECT watered_soil_moisture FROM plants_data WHERE plant_id = ?"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT watered_soil_moisture FROM plants_data WHERE plant_id = ?"); err != nil {
 		return -1, err
 	}
 
@@ -144,7 +144,7 @@ func (dbReader DatabaseHandler) GetWateredSoilMoistureFromId(plantId int) (water
 }
 
 func (dbReader DatabaseHandler) getPlantName(plant_id int) (plantName string, err error) {
-	if stmtOut, err = db.Prepare("SELECT watered_soil_moisture FROM plants_data WHERE plant_id = ?"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT watered_soil_moisture FROM plants_data WHERE plant_id = ?"); err != nil {
 		return "", err
 	}
 
@@ -160,7 +160,7 @@ func (dbReader DatabaseHandler) getPlantName(plant_id int) (plantName string, er
 }
 
 func (dbReader DatabaseHandler) GetAllPlantsNames() (plants []string, err error) {
-	if stmtOut, err = db.Prepare("SELECT name FROM plants_data"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT name FROM plants_data"); err != nil {
 		return nil, err
 	}
 
@@ -185,7 +185,7 @@ func (dbReader DatabaseHandler) GetAllPlantsNames() (plants []string, err error)
 }
 
 func (dbReader DatabaseHandler) GetAllPlantsSoilMoisture() (plants []string, err error) {
-	if stmtOut, err = db.Prepare("SELECT watered_soil_moisture FROM plants_data"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT watered_soil_moisture FROM plants_data"); err != nil {
 		return nil, err
 	}
 
@@ -210,7 +210,7 @@ func (dbReader DatabaseHandler) GetAllPlantsSoilMoisture() (plants []string, err
 }
 
 func (dbReader DatabaseHandler) GetAllPlantsX() (plantsXPos []string, err error) {
-	if stmtOut, err = db.Prepare("SELECT pos_x FROM plants_data"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT pos_x FROM plants_data"); err != nil {
 		return nil, err
 	}
 
@@ -235,7 +235,7 @@ func (dbReader DatabaseHandler) GetAllPlantsX() (plantsXPos []string, err error)
 }
 
 func (dbReader DatabaseHandler) GetAllPlantsY() (plantsYPos []string, err error) {
-	if stmtOut, err = db.Prepare("SELECT pos_y FROM plants_data"); err != nil {
+	if stmtOut, err = database.Prepare("SELECT pos_y FROM plants_data"); err != nil {
 		return nil, err
 	}
 
@@ -260,7 +260,7 @@ func (dbReader DatabaseHandler) GetAllPlantsY() (plantsYPos []string, err error)
 }
 
 func (dbReader DatabaseHandler) DeletePlant(plantName string) (err error) {
-	if stmtDel, err = db.Prepare("DELETE FROM plants_data WHERE name = ?"); err != nil {
+	if stmtDel, err = database.Prepare("DELETE FROM plants_data WHERE name = ?"); err != nil {
 		return err
 	}
 
@@ -276,7 +276,7 @@ func (dbReader DatabaseHandler) DeletePlant(plantName string) (err error) {
 }
 
 func (dbReader DatabaseHandler) GetNumberOfPlants() (numberOfPlants int, err error) {
-	rows, err := db.Query("SELECT COUNT(*) FROM plants_data")
+	rows, err := database.Query("SELECT COUNT(*) FROM plants_data")
 
 	if err != nil {
 		return -1, err
