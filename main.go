@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -96,7 +97,7 @@ var deletePlantFormLoader = serverUtils.FileTemplateLoader{
 }
 
 func main() {
-	//port := os.Getenv("PORT")
+	port := os.Getenv("PORT")
 	fs := http.FileServer(http.Dir("css"))
 	http.Handle("/css/", http.StripPrefix("/css/", fs))
 
@@ -122,7 +123,7 @@ func main() {
 		panic(err)
 	}
 	// Listen on port 8080.
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":" + port, nil); err != nil {
 		panic(err)
 	}
 }
