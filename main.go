@@ -9,16 +9,44 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strconv"
+	"time"
 )
 
 // Json received from aMazeGarden data logger template.
 type MeteoData struct {
-	AirTemperature  string `json:"airTemperature"`
-	AirHumidity     string `json:"airHumidity"`
-	SoilMoisture    string `json:"soilMoisture"`
-	SoilTemperature string `json:"soilTemperature"`
+	AppID          string `json:"app_id"`
+	DevID          string `json:"dev_id"`
+	HardwareSerial string `json:"hardware_serial"`
+	Port           int    `json:"port"`
+	Counter        int    `json:"counter"`
+	PayloadRaw     string `json:"payload_raw"`
+	PayloadFields  struct {
+		AirHumidity     int `json:"airHumidity"`
+		AirTemperature  int `json:"airTemperature"`
+		SoilMoisture    int `json:"soilMoisture"`
+		SoilTemperature int `json:"soilTemperature"`
+	} `json:"payload_fields"`
+	Metadata struct {
+		Time       time.Time `json:"time"`
+		Frequency  float64   `json:"frequency"`
+		Modulation string    `json:"modulation"`
+		DataRate   string    `json:"data_rate"`
+		CodingRate string    `json:"coding_rate"`
+		Gateways   []struct {
+			GtwID     string    `json:"gtw_id"`
+			Timestamp int       `json:"timestamp"`
+			Time      time.Time `json:"time"`
+			Channel   int       `json:"channel"`
+			Rssi      int       `json:"rssi"`
+			Snr       float64   `json:"snr"`
+			RfChain   int       `json:"rf_chain"`
+			Latitude  float64   `json:"latitude"`
+			Longitude float64   `json:"longitude"`
+			Altitude  int       `json:"altitude,omitempty"`
+		} `json:"gateways"`
+	} `json:"metadata"`
+	DownlinkURL string `json:"downlink_url"`
 }
 
 type ForecastData struct {
@@ -44,7 +72,7 @@ type PayloadData struct {
 var dbHandler = db.DatabaseHandler{
 	DriverName: "mysql",
 	User:       "aMazeGardenAI",
-	Password:   "Tvlwxfcg+1q",
+	Password:   "mopslicek",
 	Database:   "plants",
 }
 
@@ -68,7 +96,7 @@ var deletePlantFormLoader = serverUtils.FileTemplateLoader{
 }
 
 func main() {
-	port := os.Getenv("PORT")
+	//port := os.Getenv("PORT")
 	fs := http.FileServer(http.Dir("css"))
 	http.Handle("/css/", http.StripPrefix("/css/", fs))
 
@@ -94,7 +122,7 @@ func main() {
 		panic(err)
 	}
 	// Listen on port 8080.
-	if err := http.ListenAndServe(":" + port, nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		panic(err)
 	}
 }
@@ -112,17 +140,9 @@ func wateringAI() {
 	// Scan for all plants.
 	for i := 0; i < len(plantsWateredSoilMoisture); i++ {
 		// Convert string to int.
-		soilMoisture, err := strconv.Atoi(meteoData.SoilMoisture)
+		soilMoisture := meteoData.PayloadFields.SoilMoisture
 
-		if err != nil {
-			panic(err)
-		}
-
-		soilTemperature, err := strconv.Atoi(meteoData.SoilTemperature)
-
-		if err != nil {
-			panic(err)
-		}
+		soilTemperature :=meteoData.PayloadFields.SoilTemperature
 
 		// Get watered soil moisture of plant from the database.
 		wateredSoilMoisture, err := strconv.Atoi(plantsWateredSoilMoisture[i])
@@ -218,10 +238,10 @@ func handle(writer http.ResponseWriter, request *http.Request) {
 		panic(err)
 	}
 	displayData := DisplayData{
-		AirTemperature:                   meteoData.AirTemperature,
-		AirHumidity:                      meteoData.AirHumidity,
-		SoilMoisture:                     meteoData.SoilMoisture,
-		SoilTemperature:                  meteoData.SoilTemperature,
+		AirTemperature:                   string(meteoData.PayloadFields.AirTemperature),
+		AirHumidity:                      string(meteoData.PayloadFields.AirHumidity),
+		SoilMoisture:                     string(meteoData.PayloadFields.SoilMoisture),
+		SoilTemperature:                  string(meteoData.PayloadFields.SoilTemperature),
 		ForecastTemperature:              forecastData.ForecastTemperature,
 		ForecastPrecipitationPossibility: forecastData.ForecastPrecipitationPossibility,
 	}
