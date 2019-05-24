@@ -239,10 +239,10 @@ func handle(writer http.ResponseWriter, request *http.Request) {
 		panic(err)
 	}
 	displayData := DisplayData{
-		AirTemperature:                   string(meteoData.PayloadFields.AirTemperature),
-		AirHumidity:                      string(meteoData.PayloadFields.AirHumidity),
-		SoilMoisture:                     string(meteoData.PayloadFields.SoilMoisture),
-		SoilTemperature:                  string(meteoData.PayloadFields.SoilTemperature),
+		AirTemperature:                   strconv.Itoa(meteoData.PayloadFields.AirTemperature),
+		AirHumidity:                      strconv.Itoa(meteoData.PayloadFields.AirHumidity),
+		SoilMoisture:                     strconv.Itoa(meteoData.PayloadFields.SoilMoisture),
+		SoilTemperature:                  strconv.Itoa(meteoData.PayloadFields.SoilTemperature),
 		ForecastTemperature:              forecastData.ForecastTemperature,
 		ForecastPrecipitationPossibility: forecastData.ForecastPrecipitationPossibility,
 	}
