@@ -1,6 +1,8 @@
 package main
 
 import (
+	"aMazeGardenAI/db"
+	"aMazeGardenAI/serverUtils"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -38,7 +40,7 @@ type PayloadData struct {
 }
 
 // Database handler object.
-var dbHandler = DatabaseHandler{
+var dbHandler = db.DatabaseHandler{
 	DriverName: "mysql",
 	User:       "aMazeGardenAI",
 	Password:   "Tvlwxfcg+1q",
@@ -51,15 +53,15 @@ var meteoData MeteoData
 
 var forecastData ForecastData
 
-var addPlantFormLoader = FileLoader{Path: "html/addPlantForm.html"}
-var setGardenFormLoader = FileLoader{Path: "html/gardenSettingsForm.html"}
+var addPlantFormLoader = serverUtils.FileLoader{Path: "html/addPlantForm.html"}
+var setGardenFormLoader = serverUtils.FileLoader{Path: "html/gardenSettingsForm.html"}
 
-var editPlantFormLoader = FileTemplateLoader{
+var editPlantFormLoader = serverUtils.FileTemplateLoader{
 	Path:      "html/editPlantForm.html",
 	DbHandler: dbHandler,
 }
 
-var deletePlantFormLoader = FileTemplateLoader{
+var deletePlantFormLoader = serverUtils.FileTemplateLoader{
 	Path:      "html/removePlantForm.html",
 	DbHandler: dbHandler,
 }
@@ -90,7 +92,7 @@ func main() {
 		panic(err)
 	}
 	// Listen on port 8080.
-	if err := http.ListenAndServe(":5000", nil); err != nil {
+	if err := http.ListenAndServe(":80", nil); err != nil {
 		panic(err)
 	}
 }
