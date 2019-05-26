@@ -72,9 +72,9 @@ type PayloadData struct {
 // Database handler object.
 var dbHandler = db.DatabaseHandler{
 	DriverName: "mysql",
-	User:       "aMazeGardenAI",
-	Password:   "mopslicek",
-	Database:   "plants",
+	User:       "sql7293414",
+	Password:   "JQQu7m6z8m",
+	Database:   "sql7293414",
 }
 
 var maxSoilTemp = 25

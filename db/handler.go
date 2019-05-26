@@ -19,7 +19,7 @@ var stmtOut *sql.Stmt
 var stmtDel *sql.Stmt
 
 func (dbReader DatabaseHandler) Begin() (err error) {
-	dbOpenString := dbReader.User + ":" + dbReader.Password + "@tcp(plants.cesclyipuuso.eu-west-1.rds.amazonaws.com)/" + dbReader.Database
+	dbOpenString := dbReader.User + ":" + dbReader.Password + "@tcp(sql7.freemysqlhosting.net)/" + dbReader.Database
 	database, err = sql.Open(dbReader.DriverName, dbOpenString)
 	return err
 }
