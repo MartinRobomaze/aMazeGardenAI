@@ -197,7 +197,7 @@ func water(soilMoisture int, posX int, posY int) {
 		panic(err)
 	}
 
-	_, err = http.Post("https://integrations.thethingsnetwork.org/ttn-eu/api/v2/down/a_maze_garden_ai/ai_interface?key=ttn-account-v2.BzNcyhzQyamYSbG4QwOjKt2QvC4SKqAnuQe2bKXGJ3o", "application/json", bytes.NewBuffer(payload))
+	_, err = http.Post("https://en236k5hsg4bxj.x.pipedream.net", "application/json", bytes.NewBuffer(payload))
 
 	if err != nil {
 		panic(err)
