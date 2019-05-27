@@ -136,6 +136,9 @@ func main() {
 func wateringAI() {
 	fmt.Println("Got data: ", meteoData)
 	plantsWateredSoilMoisture, err := dbHandler.GetAllPlantsSoilMoisture()
+
+	wateredSoilMoisture := meteoData.PayloadFields.SoilMoisture
+
 	fmt.Println(plantsWateredSoilMoisture)
 
 	// Get number of plants in database.
@@ -145,10 +148,10 @@ func wateringAI() {
 
 	// Scan for all plants.
 	for i := 0; i < len(plantsWateredSoilMoisture); i++ {
-		soilTemperature := meteoData.PayloadFields.SoilTemperature
-
+		//soilTemperature := meteoData.PayloadFields.SoilTemperature
+		soilTemperature := 0
 		// Get watered soil moisture of plant from the database.
-		wateredSoilMoisture, err := strconv.Atoi(plantsWateredSoilMoisture[i])
+		maxWateredSoilMoisture, err := strconv.Atoi(plantsWateredSoilMoisture[i])
 
 		// Error handling.
 		if err != nil {
@@ -156,23 +159,23 @@ func wateringAI() {
 		}
 
 		// If soil is dry.
-		if wateredSoilMoisture < wateredSoilMoisture {
+		if wateredSoilMoisture < maxWateredSoilMoisture {
 			if soilTemperature < maxSoilTemp {
-				plantID, err := dbHandler.GetPlantID(wateredSoilMoisture)
+				fmt.Println("bla")
+				plantID, err := dbHandler.GetPlantID(maxWateredSoilMoisture)
 
 				plantX, err := dbHandler.GetPlantX(plantID);
-				plantY, err := dbHandler.GetPlantX(plantID);
+				plantY, err := dbHandler.GetPlantY(plantID);
+				fmt.Println(plantID, plantX, plantY)
 
 				forecastPrecipitation, err := strconv.Atoi(forecastData.ForecastPrecipitationPossibility)
 
 				if err != nil {
 					water(wateredSoilMoisture, plantX, plantY)
-					break
 				}
 
 				if forecastPrecipitation < 70 {
 					water(wateredSoilMoisture, plantX, plantY)
-					break
 				}
 			}
 		}
@@ -199,7 +202,7 @@ func water(soilMoisture int, posX int, posY int) {
 
 	fmt.Println(payloadData)
 
-	_, err = http.Post("https://en236k5hsg4bxj.x.pipedream.net", "application/json", bytes.NewBuffer(payload))
+	_, err = http.Post(meteoData.DownlinkURL, "application/json", bytes.NewBuffer(payload))
 
 	if err != nil {
 		panic(err)
