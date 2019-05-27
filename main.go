@@ -197,6 +197,8 @@ func water(soilMoisture int, posX int, posY int) {
 		panic(err)
 	}
 
+	fmt.Println(payloadData)
+
 	_, err = http.Post("https://en236k5hsg4bxj.x.pipedream.net", "application/json", bytes.NewBuffer(payload))
 
 	if err != nil {
@@ -261,8 +263,6 @@ func editPlantDb(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-
-		fmt.Println(plantName)
 
 		err = dbHandler.Update(plantName, wateredSoilMoisture)
 
