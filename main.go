@@ -66,7 +66,8 @@ type DisplayData struct {
 
 type PayloadData struct {
 	SoilMoisture int
-	MaxPosition  string
+	posX         int
+	posY		 int
 }
 
 // Database handler object.
@@ -140,10 +141,7 @@ func wateringAI() {
 
 	// Scan for all plants.
 	for i := 0; i < len(plantsWateredSoilMoisture); i++ {
-		// Convert string to int.
-		soilMoisture := meteoData.PayloadFields.SoilMoisture
-
-		soilTemperature :=meteoData.PayloadFields.SoilTemperature
+		soilTemperature := meteoData.PayloadFields.SoilTemperature
 
 		// Get watered soil moisture of plant from the database.
 		wateredSoilMoisture, err := strconv.Atoi(plantsWateredSoilMoisture[i])
@@ -154,17 +152,22 @@ func wateringAI() {
 		}
 
 		// If soil is dry.
-		if soilMoisture < wateredSoilMoisture {
+		if wateredSoilMoisture < wateredSoilMoisture {
 			if soilTemperature < maxSoilTemp {
+				plantID, err := dbHandler.GetPlantID(wateredSoilMoisture)
+
+				plantX, err := dbHandler.GetPlantX(plantID);
+				plantY, err := dbHandler.GetPlantX(plantID);
+
 				forecastPrecipitation, err := strconv.Atoi(forecastData.ForecastPrecipitationPossibility)
 
 				if err != nil {
-					water(soilMoisture)
+					water(wateredSoilMoisture, plantX, plantY)
 					break
 				}
 
 				if forecastPrecipitation < 70 {
-					water(soilMoisture)
+					water(wateredSoilMoisture, plantX, plantY)
 					break
 				}
 			}
@@ -172,51 +175,13 @@ func wateringAI() {
 	}
 }
 
-func water(soilMoisture int) {
+func water(soilMoisture int, posX int, posY int) {
 	fmt.Println("Watering needed")
-
-	xPositions, err := dbHandler.GetAllPlantsX()
-
-	if err != nil {
-		panic(err)
-	}
-
-	yPositions, err := dbHandler.GetAllPlantsY()
-
-	if err != nil {
-		panic(err)
-	}
-
-	var xMax = 0
-	var yMax = 0
-
-	for i := 0; i < len(xPositions); i++ {
-		x, err := strconv.Atoi(xPositions[i])
-		if err != nil {
-			panic(err)
-		}
-
-		if xMax < x {
-			xMax = x
-		}
-	}
-
-	for i := 0; i < len(yPositions); i++ {
-		y, err := strconv.Atoi(yPositions[i])
-		if err != nil {
-			panic(err)
-		}
-
-		if yMax < y {
-			yMax = y
-		}
-	}
-
-	positionEncoded := fmt.Sprint(xMax, ":", yMax)
 
 	var payloadData = PayloadData{
 		SoilMoisture: soilMoisture,
-		MaxPosition:  positionEncoded,
+		posX:  posX,
+		posY: posY,
 	}
 
 	payload, err := json.Marshal(payloadData)
@@ -225,7 +190,7 @@ func water(soilMoisture int) {
 		panic(err)
 	}
 
-	_, err = http.Post("http://requestbin.fullcontact.com/vj7u3ivj", "application/json", bytes.NewBuffer(payload))
+	_, err = http.Post(meteoData.DownlinkURL, "application/json", bytes.NewBuffer(payload))
 
 	if err != nil {
 		panic(err)
@@ -314,32 +279,6 @@ func deletePlantDb(writer http.ResponseWriter, request *http.Request) {
 
 		if err != nil {
 			http.Redirect(writer, request, "/removePlant", 303)
-		}
-
-		http.Redirect(writer, request, "/", 303)
-	}
-}
-
-func setGardenDb(writer http.ResponseWriter, request *http.Request) {
-	if request.Method == "POST" {
-		if err := request.ParseForm(); err != nil {
-			panic(err)
-		}
-
-		length, err := strconv.Atoi(request.FormValue("gardenLength"))
-		width, err := strconv.Atoi(request.FormValue("gardenWidth"))
-		plantsSpacing, err := strconv.Atoi(request.FormValue("plantsDistance"))
-
-		if err != nil {
-			panic(err)
-		}
-
-
-		err = dbHandler.SetGarden(length, width, plantsSpacing)
-
-		if err != nil {
-			http.Redirect(writer, request, "/removePlant", 303)
-			panic(err)
 		}
 
 		http.Redirect(writer, request, "/", 303)
