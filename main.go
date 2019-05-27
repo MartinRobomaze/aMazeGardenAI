@@ -65,9 +65,14 @@ type DisplayData struct {
 }
 
 type PayloadData struct {
-	SoilMoisture int
-	posX         int
-	posY		 int
+	DevID         string `json:"dev_id"`
+	PayloadFields PayloadFields `json:"payload_fields"`
+}
+
+type PayloadFields struct {
+	SoilMoisture int `json:"soilMoisture"`
+	PosX         int `json:"posX"`
+	PosY         int `json:"posY"`
 }
 
 // Database handler object.
@@ -178,9 +183,12 @@ func water(soilMoisture int, posX int, posY int) {
 	fmt.Println("Watering needed")
 
 	var payloadData = PayloadData{
-		SoilMoisture: soilMoisture,
-		posX:  posX,
-		posY: posY,
+		DevID:"meteo_data_logger",
+		PayloadFields:PayloadFields{
+			SoilMoisture:soilMoisture,
+			PosX:posX,
+			PosY:posY,
+		},
 	}
 
 	payload, err := json.Marshal(payloadData)
