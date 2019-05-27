@@ -110,7 +110,6 @@ func main() {
 	http.HandleFunc("/addPlantDb", addPlantToDb)
 	http.HandleFunc("/removePlantDb", deletePlantDb)
 	http.HandleFunc("/editPlantDb", editPlantDb)
-	http.HandleFunc("/setGardenDb", setGardenDb)
 	http.HandleFunc("/dataLoggerData", handleMeteoDataRequest)
 	http.HandleFunc("/forecastData", handleForecastRequest)
 
